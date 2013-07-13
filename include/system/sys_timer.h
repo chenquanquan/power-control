@@ -24,8 +24,19 @@
 #define  T1_B_INT_TIMEOUT       TIMER1_BASE , TIMER_TIMB_TIMEOUT
 #define  T1_BOTH_INT_TIMEOUT       TIMER1_BASE , TIMER_TIMB_TIMEOUT | TIMER_TIMA_TIMEOUT
 
+typedef struct {
+	unsigned long base;
+	unsigned long ntimer;
+	unsigned long config;
+	unsigned long value;
+	unsigned long interrupt;
+	unsigned long intermod;
+	void (*handler)(void);
+} TIMER_t;
+
 extern void TIMER_init_clk(void);
 extern void TIMER_init_pwm(void);
 extern void TIMER_init_capture(void);
+extern void TIMER_init(TIMER_t *timer);
 
 #endif /* __SYS_TIMER_H__ */

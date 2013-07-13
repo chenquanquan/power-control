@@ -10,7 +10,7 @@
 #include "lcd/lcd_5110.h"
 #include "lcd/char_data.h"
 
-extern unsigned long sys_clock_value;
+unsigned long sys_clock_value;
 #define delay_ms(a)	SysCtlDelay((a) * (sys_clock_value / 3000));
 #define delay_us(a)	SysCtlDelay((a) * (sys_clock_value / 3));
 

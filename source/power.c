@@ -28,7 +28,7 @@
 #endif
 
 #ifdef MODULE_TIMER
-#include "src/timer.h"
+#include "system/sys_timer.h"
 #include "data/spwm.h"
 unsigned char spwm[256];
 #endif
@@ -57,12 +57,11 @@ void jtag_wait(void)
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 }
 
-
+#ifdef MODULE_TIMER
 void Timer0IntHandler(void)
 {
 	static unsigned char count = 0, i = 0;
 
-#if 1
 	if (i == 0) {
 		TimerLoadSet(TIMER0_BASE, TIMER_A, (spwm[count])+0xf);
 		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 1);
@@ -77,10 +76,11 @@ void Timer0IntHandler(void)
 		i=0;
 		count++;
 	}
-#endif
 	/* Clear the timer interrupt */
 	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 }
+#endif
+
 
 int main(void)
 {
@@ -124,17 +124,16 @@ int main(void)
 	/* Set GPIO B0 as an output */
     GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2);
 	GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2, 0);
-	/* Configure the 32-bit periodic timers */
-	TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
-	TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet()/1000);
-	/*      TimerLoadSet(TIMER0_BASE, TIMER_A, 0xffffff00); */
-	/* Registe timer handler */
-	TimerIntRegister(TIMER0_BASE, TIMER_A, Timer0IntHandler);
-	/* Setup the interrupt for the timer timeouts */
-	IntEnable(INT_TIMER0A);
-	TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-	/* Enable the timer */
-	TimerEnable(TIMER0_BASE, TIMER_A);
+
+	TIMER_t timer;
+	timer.base = TIMER0_BASE;
+	timer.ntimer = TIMER_A;
+	timer.config = TIMER_CFG_32_BIT_PER;
+	timer.value = SysCtlClockGet() / 1000;
+	timer.interrupt = INT_TIMER0A;
+	timer.intermod = TIMER_TIMA_TIMEOUT;
+	timer.handler = Timer0IntHandler;
+	TIMER_init(&timer);
 #endif
 
 	/* enable systerm interrupt */

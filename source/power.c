@@ -9,8 +9,8 @@
 #include "src/gpio.h"
 
 /* module */
-
-#define MODULE_LCD_5110
+#define MODULE_TIMER
+/* #define MODULE_LCD_5110 */
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 
@@ -27,6 +27,11 @@
 #include "periph/button.h"
 #endif
 
+#ifdef MODULE_TIMER
+#include "src/timer.h"
+#include "data/spwm.h"
+unsigned char spwm[256];
+#endif
 
 /* #include "data/sin.h" */
 
@@ -52,18 +57,38 @@ void jtag_wait(void)
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 }
 
-unsigned long sys_clock_value;
-unsigned int sin_data[1024];
-extern unsigned int capture_value;
+
+void Timer0IntHandler(void)
+{
+	static unsigned char count = 0, i = 0;
+
+#if 1
+	if (i == 0) {
+		TimerLoadSet(TIMER0_BASE, TIMER_A, (spwm[count])+0xf);
+		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 1);
+		i++;
+
+		if ((count==128) || (count==0))
+			GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_2,
+					~GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_2));
+	} else {
+		TimerLoadSet(TIMER0_BASE, TIMER_A, (0xff - spwm[count])+0xf);
+		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 0);
+		i=0;
+		count++;
+	}
+#endif
+	/* Clear the timer interrupt */
+	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+}
 
 int main(void)
 {
-	unsigned int count;
+ 	unsigned int n;
 
 	jtag_wait();
 
 
-	sys_clock_value = 10;
 #if 1
 	SysCtlLDOSet(SYSCTL_LDO_2_75V);//  配置PLL前须将LDO设为2.75V
 
@@ -71,8 +96,6 @@ int main(void)
 			SYSCTL_OSC_MAIN |//  主振荡器
 			SYSCTL_XTAL_6MHZ |//  外接6MHz晶振
 			SYSCTL_SYSDIV_2);//  分频结果为20MHz
-
-	sys_clock_value = SysCtlClockGet();
 #endif
 
 #define TIME_A_DIVISION		10
@@ -91,8 +114,31 @@ int main(void)
 	button_init_gpio();
 #endif
 
+#ifdef MODULE_TIMER
+	for (n=0; n < 255; n++) {
+		spwm[n] = 0xff - spwm_data[n];
+	}
+	/* Enable the peripherals */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+	/* Set GPIO B0 as an output */
+    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2);
+	GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2, 0);
+	/* Configure the 32-bit periodic timers */
+	TimerConfigure(TIMER0_BASE, TIMER_CFG_32_BIT_PER);
+	TimerLoadSet(TIMER0_BASE, TIMER_A, SysCtlClockGet()/1000);
+	/*      TimerLoadSet(TIMER0_BASE, TIMER_A, 0xffffff00); */
+	/* Registe timer handler */
+	TimerIntRegister(TIMER0_BASE, TIMER_A, Timer0IntHandler);
+	/* Setup the interrupt for the timer timeouts */
+	IntEnable(INT_TIMER0A);
+	TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+	/* Enable the timer */
+	TimerEnable(TIMER0_BASE, TIMER_A);
+#endif
+
 	/* enable systerm interrupt */
-/* 	IntMasterEnable(); */
+	IntMasterEnable();
 
 	/* TIMER_init_capture(); */
 	/* DAC_init_gpio(); */

@@ -5,6 +5,7 @@
  * 
  *  Copyright (c) 2013, chenchacha
  */
+#include <stdio.h>
 #include <string.h>
 #include "periph/lcd_5110.h"
 #include "lcd/frame-buffer.h"
@@ -22,8 +23,9 @@ void display_start(frame_buffer_t *frame_buffer)
 	LCD_init();
 
 	fb_write_char(0,5,"NOKIA 5110", fb, column_max);
-/* 	sprintf(title, "Description: Display on LCD", fb, column_max); */
-	fb_write_char(1,0,"Description:  display on LCD", fb, column_max);
+ 	sprintf(title, "Description: chenchacha");
+ 	fb_write_char(1,0,title, fb, column_max); 
+/* 	fb_write_char(1,0,"Description:  display on LCD", fb, column_max); */
 	fb_write_char(3,0,"Volage:10000V, Current:10000A.", fb, column_max);
 /* 	fb_write_point(2,1,fb,column_max); */
 /*   	fb_write_line(8,5,3,10,fb, column_max);

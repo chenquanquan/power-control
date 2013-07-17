@@ -85,24 +85,39 @@ CC=${PREFIX}-gcc
 #
 # The flags passed to the assembler.
 #
+#AFLAGS=-mthumb         \
+#       -mcpu=cortex-m3 \
+#       -MD             \
+#	   -lc
 AFLAGS=-mthumb         \
-       -mcpu=cortex-m3 \
-       -MD             \
-	   -lc
+	   -march=armv7    \
+	   -mfix-cortex-m3-ldrd \
+       -MD
+
+
 
 #
 # The flags passed to the compiler.
 #
+#CFLAGS=-mthumb         \
+#       -mcpu=cortex-m3 \
+#       -MD             \
+#       -O2             \
+#       -std=c99        \
+#       -Wall           \
+#       -pedantic       \
+#       -DPART_${PART}  \
+#       -c	\
+#       -I./include     
 CFLAGS=-mthumb         \
-       -mcpu=cortex-m3 \
+	   -march=armv7    \
+	   -mfix-cortex-m3-ldrd \
        -MD             \
-       -O2             \
        -std=c99        \
        -Wall           \
-       -pedantic       \
-       -DPART_${PART}  \
        -c	\
        -I./include     
+
 
 #
 # The command for calling the library archiver.
@@ -117,9 +132,8 @@ LD=${PREFIX}-ld
 #
 # The flags passed to the linker.
 #
-LDFLAGS=--gc-sections \
-		-nostdlib     \
-		-L ../newlib/_root/usr/local/arm-none-eabi/lib
+#LDFLAGS=--gc-sections
+LDFLAGS=--gc-sections
 
 #
 # Get the location of libgcc.a from the GCC front-end.
@@ -129,7 +143,8 @@ LIBGCC=${shell ${CC} ${CFLAGS} -print-libgcc-file-name}
 #
 # Get the location of libc.a from the GCC front-end.
 #
-LIBC=${shell ${CC} ${CFLAGS} -print-file-name=libc.a}
+#LIBC=${shell ${CC} ${CFLAGS} -print-file-name=libc.a}
+LIBC=./lib/libc.a
 
 #
 # The command for extracting images from the linked executables.

@@ -36,12 +36,4 @@ extern void LCD_draw_frame_buffer(int start_row, int start_column,
 								unsigned char **frame_buffer, int column_max);
 void LCD_start();
 
-#include "lcd/display.h"
-extern void LCD_draw_fb_debug(int start_row, int start_column, unsigned char frame_buffer[][FRAME_BUFFER_COLUMN_MAX], int column_max);
-void LCD_draw_fb_nostdlib(int start_row, int start_column);
-
-
-/* void fb_write_char_nostdlib(int row, int column, char *ptrc); */
-/* void LCD_draw_fb_nostdlib(int start_row, int start_column); */
-
 #endif /* __LCD_5110_h__ */

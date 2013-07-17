@@ -6,7 +6,6 @@
  *  Copyright (c) 2013, chenchacha
  */
 #include "lcd/frame-buffer.h"
-#include "lcd/display.h"
 
 #if 1
 unsigned char lcd_font[96][5] =
@@ -112,61 +111,6 @@ unsigned char lcd_font[96][5] =
 extern unsigned char lcd_font[96][5];
 #endif
 
-void fb_write_char_debug(int row, int column, char *ptrc,
-						unsigned char fb[][FRAME_BUFFER_COLUMN_MAX], int column_max)
-{
-	int i, j, n;
-	unsigned char word;
-
-	i=row;
-	j=column;
-
-	while (*ptrc!='\0') {
-		word = *ptrc & 0x7f;
-		if (word < ' ')
-			word = 0;
-		else
-			word -= ' ';
-
-		/* write char in frame buffer */
-		for (n=0;n<5;n++) {
-			fb[i][j+n] = lcd_font[word][n];
-		}
-		j += 5;
-		ptrc++;
-	}
-
-}
-
-#if 1
-/* write char on framebuffer an framebuffer is a global variable */
-unsigned char lcd_frame_buffer[FRAME_BUFFER_ROW_MAX][FRAME_BUFFER_COLUMN_MAX];
-void fb_write_char_nostdlib(int row, int column, char *ptrc)
-{
-	int i, j, n;
-	unsigned char word;
-
-	i=row;
-	j=column;
-
-	while (*ptrc!='\0') {
-		word = *ptrc & 0x7f;
-		if (word < ' ')
-			word = 0;
-		else
-			word -= ' ';
-
-		/* write char in frame buffer */
-		for (n=0;n<5;n++) {
-			lcd_frame_buffer[i][j+n] = lcd_font[word][n];
-		}
-		j += 5;
-		ptrc++;
-	}
-
-}
-#endif
-
 void fb_write_char(int row, int column, char *ptrc, unsigned char **fb, int column_max)
 {
 	int i, j, n;
@@ -199,7 +143,7 @@ void fb_write_point(int row, int column, unsigned char **fb, int column_max)
 
 	i = row/6;
 	word = *((unsigned char *)fb+i*column_max+column);
-	word |= 0x80 >> (row%6);
+	word |= 0x1 << (row%6);
 	*((unsigned char *)fb+i*column_max+column) = word;
 }
 

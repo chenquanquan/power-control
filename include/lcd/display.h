@@ -9,9 +9,14 @@
 #define __DISPLAY_H__
 
 #define FRAME_BUFFER_ROW_MAX	(6)
-#define FRAME_BUFFER_COLUMN_MAX	(17*5*2)
+/* #define FRAME_BUFFER_COLUMN_MAX	(17*5*2) */
+#define FRAME_BUFFER_COLUMN_MAX	(18*6*2)
 
-extern void display_start(unsigned char **fb, int column_max);
-extern void display_start_debug(unsigned char fb[][FRAME_BUFFER_COLUMN_MAX], int column_max);
-extern void display_start_nostdlib(void);
+typedef struct {
+	unsigned char **fb;
+	int column_max;
+} frame_buffer_t;
+
+extern void display_start(frame_buffer_t *frame_buffer);
+extern int display_roll(frame_buffer_t *frame_buffer, int place, int roll, int dirction, int step);
 #endif /* __DISPLAY_H__ */

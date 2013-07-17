@@ -48,7 +48,6 @@ extern unsigned int sin_data[];
 void GPIO_B_routine(void)
 {
 	unsigned int status;
-	unsigned int i;
 
 	status = GPIOPinIntStatus(BUTTON_PORT, true);
 	GPIOPinIntClear(BUTTON_PORT, status);
@@ -57,7 +56,7 @@ void GPIO_B_routine(void)
 	GPIOPinWrite(GPIO_PORTB_BASE, 0xff, tmp);
 	*/
 	/* LCD_write_char(3, 2, status % 10); */
-#if 1
+#if 0
 	switch (status & BUTTON_MASK) {
 		/* frequency decreate */
 		case BUTTON_1:

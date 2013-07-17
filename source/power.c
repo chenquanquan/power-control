@@ -90,6 +90,8 @@ void Timer0IntHandler(void)
 int main(void)
 {
  	unsigned int n;
+	frame_buffer_t fb;
+	unsigned int fb_place=0;
 
 	jtag_wait();
 
@@ -108,15 +110,9 @@ int main(void)
 #endif
 
 #ifdef MODULE_LCD
-#ifdef MODULE_STDLIB
-/* 	LCD_start(); */
- 	fb = (unsigned char *)malloc(FRAME_BUFFER_ROW_MAX * FRAME_BUFFER_COLUMN_MAX);
- 	display_start(fb, FRAME_BUFFER_COLUMN_MAX);
-/* 	display_start_debug(lcd_frame_buffer, FRAME_BUFFER_COLUMN_MAX); */
-#else
-/*  	display_start_nostdlib(); */
-	display_start((unsigned char **)frame_buffer, FRAME_BUFFER_COLUMN_MAX);
-#endif
+	fb.fb = (unsigned char **)frame_buffer;
+	fb.column_max = FRAME_BUFFER_COLUMN_MAX;
+	display_start(&fb);
 #endif
 
 #ifdef MODULE_BUTTON
@@ -146,7 +142,7 @@ int main(void)
 #endif
 
 	/* enable systerm interrupt */
-	IntMasterEnable();
+ 	IntMasterEnable();
 
 	/* TIMER_init_capture(); */
 	/* DAC_init_gpio(); */
@@ -159,16 +155,11 @@ int main(void)
 #endif
 
 	while(1) {
-#ifdef MODULE_LCD_5110
-		/* 
-		capture_value++;
-		LCD_write_char(0, 3, capture_value / 100000 % 10);
-		LCD_write_char(1, 3, capture_value / 10000 % 10);
-		LCD_write_char(2, 3, capture_value / 1000 % 10);
-		LCD_write_char(3, 3, capture_value / 100 % 10);
-		LCD_write_char(4, 3, capture_value / 10 % 10);
-		LCD_write_char(5, 3, capture_value % 10);
-		*/
+#ifdef MODULE_LCD
+		/* left roll the screen */
+		fb_place = display_roll(&fb,fb_place,80,1, 8);
+		/* right roll the screen */
+		fb_place = display_roll(&fb,fb_place,80,0, 1);
 #endif
 	}
 

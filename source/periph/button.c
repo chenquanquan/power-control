@@ -10,7 +10,7 @@
 #include "src/gpio.h"
 
 #include "periph/button.h"
-#include "lcd/lcd_5110.h"
+#include "periph/lcd_5110.h"
 
 #include "src/pin_map.h"
 #include "hw_pwm.h"

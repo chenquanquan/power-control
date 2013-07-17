@@ -10,13 +10,18 @@
 
 /* module */
 #define MODULE_TIMER
-/* #define MODULE_LCD_5110 */
+#define MODULE_LCD
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
+/* #define MODULE_STDLIB */
 
+#ifdef MODULE_STDLIB
+#endif
 
-#ifdef MODULE_LCD_5110
-#include "lcd/lcd_5110.h"
+#ifdef MODULE_LCD
+/* #include "periph/lcd_5110.h" */
+#include "lcd/display.h"
+unsigned char frame_buffer[FRAME_BUFFER_ROW_MAX][FRAME_BUFFER_COLUMN_MAX];
 #endif
 
 #ifdef MODULE_DAC_5618
@@ -90,24 +95,28 @@ int main(void)
 
 
 #if 1
-	SysCtlLDOSet(SYSCTL_LDO_2_75V);//  配置PLL前须将LDO设为2.75V
+	/* set LDO in 2.75v */
+	SysCtlLDOSet(SYSCTL_LDO_2_75V);
 
-	SysCtlClockSet(SYSCTL_USE_PLL |//  系统时钟设置，采用PLL
-			SYSCTL_OSC_MAIN |//  主振荡器
-			SYSCTL_XTAL_6MHZ |//  外接6MHz晶振
-			SYSCTL_SYSDIV_2);//  分频结果为20MHz
+	/* configure system clock
+	 * PLL.
+	 * main osc.
+	 * xtal 6MHz.
+	 * system clock div 20MHz.
+	 */
+	SysCtlClockSet(SYSCTL_USE_PLL|SYSCTL_OSC_MAIN|SYSCTL_XTAL_6MHZ|SYSCTL_SYSDIV_2);
 #endif
 
-#define TIME_A_DIVISION		10
-
-#ifdef MODULE_LCD_5110
-	LCD_init();
-	count = SysCtlClockGet() / TIME_A_DIVISION;
-
-	LCD_write_char(0, 0, count / 1000 % 10);
-	LCD_write_char(1, 0, count / 100 % 10);
-	LCD_write_char(2, 0, count / 10 % 10);
-	LCD_write_char(3, 0, count % 10);
+#ifdef MODULE_LCD
+#ifdef MODULE_STDLIB
+/* 	LCD_start(); */
+ 	fb = (unsigned char *)malloc(FRAME_BUFFER_ROW_MAX * FRAME_BUFFER_COLUMN_MAX);
+ 	display_start(fb, FRAME_BUFFER_COLUMN_MAX);
+/* 	display_start_debug(lcd_frame_buffer, FRAME_BUFFER_COLUMN_MAX); */
+#else
+/*  	display_start_nostdlib(); */
+	display_start((unsigned char **)frame_buffer, FRAME_BUFFER_COLUMN_MAX);
+#endif
 #endif
 
 #ifdef MODULE_BUTTON
@@ -148,7 +157,6 @@ int main(void)
 #ifdef MODULE_DAC_5618
 	DAC_write_data(0x1ff, 1);
 #endif
-
 
 	while(1) {
 #ifdef MODULE_LCD_5110

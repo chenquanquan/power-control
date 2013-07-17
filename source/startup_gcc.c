@@ -218,3 +218,54 @@ IntDefaultHandler(void)
     {
     }
 }
+
+/* add from syscalls */
+#if 0
+#include <_ansi.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+#include <errno.h>
+#include <reent.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+caddr_t _sbrk		_PARAMS ((int));
+caddr_t
+_sbrk (int incr)
+{
+  extern char end asm ("end"); /* Defined by the linker.  */
+  static char * heap_end;
+  char * prev_heap_end;
+
+  if (heap_end == NULL)
+    heap_end = & end;
+  
+  prev_heap_end = heap_end;
+  
+  if (heap_end + incr > stack_ptr)
+    {
+      /* Some of the libstdc++-v3 tests rely upon detecting
+	 out of memory errors, so do not abort here.  */
+#if 0
+      extern void abort (void);
+
+      _write (1, "_sbrk: Heap and stack collision\n", 32);
+      
+      abort ();
+#else
+      errno = ENOMEM;
+      return (caddr_t) -1;
+#endif
+    }
+  
+  heap_end += incr;
+
+  return (caddr_t) prev_heap_end;
+}
+#endif

@@ -80,7 +80,7 @@ $(PACKETNAME).tar.bz2:
 
 cscope:
 	ctags -R
-	cscope -Rqkbv
+	cscope -RqkbvI /opt/CodeSourcery/Sourcery_CodeBench_Lite_for_ARM_EABI/arm-none-eabi/include/
 #
 # The rule to create the target directory.
 #
@@ -99,10 +99,13 @@ ${COMPILER}/power.axf: ${COMPILER}/power.o
 # ${COMPILER}/power.axf: ${COMPILER}/sys_adc.o
 
 ${COMPILER}/power.axf: ${COMPILER}/lcd_5110.o
+${COMPILER}/power.axf: ${COMPILER}/frame-buffer.o
+${COMPILER}/power.axf: ${COMPILER}/display.o
 ${COMPILER}/power.axf: ${COMPILER}/dac_5618.o
 ${COMPILER}/power.axf: ${COMPILER}/button.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_pwm.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_timer.o
+#${COMPILER}/power.axf: ${COMPILER}/syscalls.o
 
 # ${COMPILER}/power.axf: ${COMPILER}/button.o
 # ${COMPILER}/power.axf: ${COMPILER}/menu.o

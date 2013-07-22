@@ -111,16 +111,28 @@ unsigned char lcd_font[96][5] =
 extern unsigned char lcd_font[96][5];
 #endif
 
-void fb_write_char(int row, int column, char *ptrc, unsigned char **fb, int column_max)
+/* frame buffer structure.
+ * word = 8*5 point.
+ * screen = (16+4/5) * 6 word.
+ */ 
+
+void fb_write_char(int row, int column, char *ptrc, unsigned char *fb, int column_max)
 {
 	int i, j, n;
 	unsigned char word;
 
-	i=row;
+	/* the row in data of array */
+	i=row*column_max;
 	j=column;
 
 	while (*ptrc!='\0') {
 		word = *ptrc & 0x7f;
+
+		if (word == '\n') {
+			i += column_max;
+			j = 0;
+		}
+		/* lookup from wrod table */
 		if (word < ' ')
 			word = 0;
 		else
@@ -128,7 +140,8 @@ void fb_write_char(int row, int column, char *ptrc, unsigned char **fb, int colu
 
 		/* write char in frame buffer */
 		for (n=0;n<5;n++) {
-			*((unsigned char *)fb+i*column_max+j+n) = lcd_font[word][n];
+/* 			*((unsigned char *)fb+i+j+n) = lcd_font[word][n]; */
+			*(fb+i+j+n) = lcd_font[word][n];
 		}
 		j += 5;
 		ptrc++;
@@ -136,29 +149,44 @@ void fb_write_char(int row, int column, char *ptrc, unsigned char **fb, int colu
 
 }
 
-void fb_write_point(int row, int column, unsigned char **fb, int column_max)
+void fb_write_point(int row, int column, unsigned char *fb, int column_max)
 {
 	int i;
 	unsigned char word;
 
-	i = row/6;
-	word = *((unsigned char *)fb+i*column_max+column);
-	word |= 0x1 << (row%6);
-	*((unsigned char *)fb+i*column_max+column) = word;
+	i = row/8;
+	word = *(fb+i*column_max+column);
+	word |= 0x1 << (row%8);
+	*(fb+i*column_max+column) = word;
 }
 
-void fb_write_line(int start_r, int start_c, int length, int width, unsigned char **fb, int column_max)
+void fb_negation_point(int row, int column, unsigned char *fb, int column_max)
+{
+	int i;
+	unsigned char word;
+
+	i = row/8;
+	word = *(fb+i*column_max+column);
+	word ^= 0x1 << (row%8);
+	*(fb+i*column_max+column) = word;
+}
+
+void fb_write_dollop(int startx, int starty, int endx, int endy, unsigned char *fb, int column_max)
 {
 	int i, j;
 
-	i=start_r;
-	j=start_c;
+	for (i=starty;i<=endy;i++)
+		for (j=startx;j<=endx;j++) {
+			fb_write_point(i,j,fb,column_max);
+		}
+}
 
-	while (i!=length || j!= width) {
-		fb_write_point(i,j,fb, column_max);
-		if (i < length)
-			i++;
-		if (j < width)
-			j++;
-	}
+void fb_negation_dollop(int startx, int starty, int endx, int endy, unsigned char *fb, int column_max)
+{
+	int i, j;
+
+	for (i=starty;i<=endy;i++)
+		for (j=startx;j<=endx;j++) {
+			fb_negation_point(i,j,fb,column_max);
+		}
 }

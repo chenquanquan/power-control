@@ -1,4 +1,4 @@
-/* #include "stdlib.h" */
+#include "stdlib.h"
 #include "hw_ints.h"
 #include "hw_memmap.h"
 #include "hw_types.h"
@@ -11,6 +11,7 @@
 /* module */
 #define MODULE_TIMER
 #define MODULE_LCD
+#define MODULE_PLL
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 /* #define MODULE_STDLIB */
@@ -20,8 +21,8 @@
 
 #ifdef MODULE_LCD
 /* #include "periph/lcd_5110.h" */
-#include "lcd/display.h"
-unsigned char frame_buffer[FRAME_BUFFER_ROW_MAX][FRAME_BUFFER_COLUMN_MAX];
+/* #include "lcd/display.h" */
+#include "lcd/menu.h"
 #endif
 
 #ifdef MODULE_DAC_5618
@@ -70,6 +71,7 @@ void Timer0IntHandler(void)
 	if (i == 0) {
 		TimerLoadSet(TIMER0_BASE, TIMER_A, (spwm[count])+0xf);
 		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 1);
+
 		i++;
 
 		if ((count==128) || (count==0))
@@ -78,6 +80,7 @@ void Timer0IntHandler(void)
 	} else {
 		TimerLoadSet(TIMER0_BASE, TIMER_A, (0xff - spwm[count])+0xf);
 		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 0);
+
 		i=0;
 		count++;
 	}
@@ -89,14 +92,12 @@ void Timer0IntHandler(void)
 
 int main(void)
 {
- 	unsigned int n;
-	frame_buffer_t fb;
-	unsigned int fb_place=0;
+ 	int n;
 
 	jtag_wait();
 
 
-#if 1
+#ifdef MODULE_PLL
 	/* set LDO in 2.75v */
 	SysCtlLDOSet(SYSCTL_LDO_2_75V);
 
@@ -110,13 +111,10 @@ int main(void)
 #endif
 
 #ifdef MODULE_LCD
-	fb.fb = (unsigned char **)frame_buffer;
-	fb.column_max = FRAME_BUFFER_COLUMN_MAX;
-	display_start(&fb);
+	menu_start();
 #endif
 
 #ifdef MODULE_BUTTON
-	button_init_gpio();
 #endif
 
 #ifdef MODULE_TIMER
@@ -156,12 +154,16 @@ int main(void)
 
 	while(1) {
 #ifdef MODULE_LCD
+/*   		menu_roll(); */
+		menu_refresh();
 		/* left roll the screen */
-		fb_place = display_roll(&fb,fb_place,80,1, 8);
+		/* 		fb_place = display_roll(&fb,fb_place,80,1, 8); */
 		/* right roll the screen */
-		fb_place = display_roll(&fb,fb_place,80,0, 1);
+		/* 		fb_place = display_roll(&fb,fb_place,80,0, 8); */
 #endif
 	}
+
+	menu_end();
 
 	return 0;
 }

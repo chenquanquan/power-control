@@ -29,7 +29,8 @@
 #
 # Defines the part type that this project uses.
 #
-PART=LM3S811
+#PART=LM3S811
+PART=LM3S1138
 NAME=power
 VERSION=1
 SUBLEVEL=1
@@ -105,7 +106,7 @@ ${COMPILER}/power.axf: ${COMPILER}/dac_5618.o
 ${COMPILER}/power.axf: ${COMPILER}/button.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_pwm.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_timer.o
-#${COMPILER}/power.axf: ${COMPILER}/syscalls.o
+${COMPILER}/power.axf: ${COMPILER}/menu.o
 
 # ${COMPILER}/power.axf: ${COMPILER}/button.o
 # ${COMPILER}/power.axf: ${COMPILER}/menu.o

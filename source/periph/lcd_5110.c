@@ -34,19 +34,15 @@ static void LCD_write_byte(unsigned char dat, unsigned int cmd)
 	/* enable LCD */
 	LCD_CE_L;
 	/* check command or data */
-	if (cmd)
-		LCD_DC_H;	/* dat is data */
-	else
-		LCD_DC_L;	/* dat is command */
+	if (cmd) LCD_DC_H;	/* dat is data */
+	else LCD_DC_L;	/* dat is command */
 
 	/* write data by GPIO */
 	for (i = 0; i < 8; i++) {
 		LCD_CLK_L;
 
-		if (dat & 0x80)
-			LCD_DAT_H;
-		else
-			LCD_DAT_L;
+		if (dat & 0x80) LCD_DAT_H;
+		else LCD_DAT_L;
 
 		dat <<= 1;
 		LCD_CLK_H;
@@ -107,82 +103,13 @@ void LCD_set_pos(unsigned int x, unsigned int y)
 	LCD_write_byte(0x80 | x, 0);
 }
 
-
-#if 0
-extern unsigned char lcd_font[96][5];
-unsigned char lcd_fb[6][17*5];
-
-void LCD_write_char(int row, int column, char *ptrc)
-{
-	int i, j, n;
-	unsigned char word;
-
-	i=row;
-	j=column;
-
-	while (*ptrc!='\0') {
-		word = *ptrc & 0x7f;
-		if (word < ' ')
-			word = 0;
-		else
-			word -= ' ';
-
-		/* write char in frame buffer */
-		for (n=0;n<5;n++) {
-			lcd_fb[i][j+n] = lcd_font[word][n];
-		}
-		j += 5;
-		ptrc++;
-	}
-
-}
-
-void LCD_draw_fb(int start_row, int start_column)
-{
-	unsigned int i, column, row;
-
-	LCD_set_pos(0, 0);
-	/* enable LCD */
-	LCD_CE_L;
-	/* dat is data */
-	LCD_DC_H;
-
-
-	for (row=start_row; row<start_row+6; row++) {
-		for (column=start_column; column<start_column+84; column++) {
-			for (i = 0; i < 8; i++) {
-				LCD_CLK_L; 
-
-				if (lcd_fb[row][column] & 0x80 >> i)
-					LCD_DAT_H;
-				else
-					LCD_DAT_L;
-
-				LCD_CLK_H;
-			}
-		}
-	}
-
-	/* disable LCD */
-	LCD_CE_H;
-}
-
-void LCD_start()
-{
-	LCD_init();
-
-	LCD_write_char(1,1,"NOKIA");
-/* 	fb_write_line(8,5,3,10,fb); */
-	LCD_draw_fb(0,0);
-}
-#endif
-
 /* LCD_draw() - draw frame buffer on LCD
  */
 void LCD_draw_frame_buffer(int start_row, int start_column,
-							unsigned char **frame_buffer, int column_max)
+							unsigned char *frame_buffer, int column_max)
 {
-	unsigned int i, column, row;
+	int i, column, row;
+	int row_max = start_row + column_max * 6;
 
 	LCD_set_pos(0, 0);
 	/* enable LCD */
@@ -191,13 +118,14 @@ void LCD_draw_frame_buffer(int start_row, int start_column,
 	LCD_DC_H;
 
 
-	for (row=start_row; row<start_row+6; row++) {
+	for (row=start_row*column_max; /* row in data of array */
+			row<row_max;
+			row += column_max) {
 		for (column=start_column; column<start_column+84; column++) {
 			for (i = 0; i < 8; i++) {
 				LCD_CLK_L; 
 
-/* 				if ((*(unsigned char *)frame_buffer+row*column_max+column) & 0x80 >> i) */
-				if ((*((unsigned char *)frame_buffer+row*column_max+column)) & 0x80 >> i)
+				if ((*(frame_buffer+row+column)) & 0x80 >> i)
 					LCD_DAT_H;
 				else
 					LCD_DAT_L;
@@ -210,3 +138,36 @@ void LCD_draw_frame_buffer(int start_row, int start_column,
 	/* disable LCD */
 	LCD_CE_H;
 }
+
+/*  LCD_draw_point - write a point on LCD
+*/
+void LCD_draw_point(int row, int column)
+{
+	/* fixed position */
+	LCD_set_pos(row, column);
+
+	/* draw a point */
+	LCD_CLK_L;
+	LCD_DAT_H;
+	LCD_CLK_H;
+}		/* -----  end of function LCD_draw_point  ----- */
+
+
+/*  LCD_draw_line - write a line on LCD
+*/
+void LCD_draw_dollop(int startx, int starty, int endx, int endy)
+{
+	int i, j;
+
+	for (i=starty; i<=endy; i++)
+		for (j=startx; j<=endx; j++) {
+			/* enable LCD */
+			LCD_CE_L;
+			/* dat is data */
+			LCD_DC_H;
+
+			LCD_draw_point(i,j);
+			/* disable LCD */
+			LCD_CE_H;
+		}
+}		/* -----  end of function LCD_draw_line  ----- */

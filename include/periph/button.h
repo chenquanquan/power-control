@@ -1,6 +1,9 @@
 #ifndef __BUTTON_H__
 #define __BUTTON_H__
 
+#include "hw_types.h"
+#include "src/gpio.h"
+
 #define BUTTON_PERIPH		SYSCTL_PERIPH_GPIOB
 #define BUTTON_PORT		GPIO_PORTB_BASE
 #define BUTTON_INT		INT_GPIOB
@@ -11,6 +14,7 @@
 #define BUTTON_4		GPIO_PIN_5
 #define BUTTON_MASK		(BUTTON_1 | BUTTON_2 | BUTTON_3 | BUTTON_4)
 
-void button_init_gpio();
+extern void button_init_gpio(void);
+extern unsigned char button_test(unsigned char botton);
 
 #endif /* __BUTTON_H__ */

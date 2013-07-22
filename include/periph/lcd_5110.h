@@ -30,10 +30,9 @@
 extern void LCD_clean(void);
 extern void LCD_init(void);
 extern void LCD_set_pos(unsigned int x, unsigned int y);
-/* extern void LCD_write_char(unsigned int row, unsigned int line, unsigned char dat); */
-/* extern void LCD_write_small_char(unsigned int row, unsigned int line, unsigned char dat); */
 extern void LCD_draw_frame_buffer(int start_row, int start_column,
-								unsigned char **frame_buffer, int column_max);
-void LCD_start();
-
+								unsigned char *frame_buffer, int column_max);
+extern void LCD_start();
+extern void LCD_draw_point(int row, int column);
+extern void LCD_draw_dollop(int startx, int starty, int endx, int endy);
 #endif /* __LCD_5110_h__ */

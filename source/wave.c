@@ -47,7 +47,7 @@ void timer0_spwm_handler(void)
 }
 
 
-/* wave_spwm -
+/* wave_spwm - (failed)
 */
 void wave_spwm(void)
 {
@@ -120,8 +120,11 @@ void wave_pwm(unsigned long period1, unsigned long period2)
  	PWM_init(&pwm2);
 }		/* -----  end of function wave_pwm  ----- */
 
-/* wave_capture -
-*/
+/* wave_capture - wave capture by timer
+ * @capture_handler: the handler function for capture.
+ * enable timer0 channel A and CCP0(PA0).
+ * capture all of edges. both positive edges and negative edges.
+ */
 void wave_capture(void (*capture_handler)(void))
 {
 	TIMER_t timer;
@@ -144,4 +147,58 @@ void wave_capture(void (*capture_handler)(void))
 	timer.intermod = TIMER_CAPA_EVENT;
 	timer.handler = capture_handler;
 	TIMER_init(&timer);
+	TimerEnable(timer.base, timer.ntimer);
 }		/* -----  end of function wave_capture  ----- */
+
+/* wave_interrupt_init - enable a timer interrupt
+ * @value: the count value.
+ * @wave_handler: the handler function for capture.
+ */
+void wave_interrupt_init(unsigned long value, void (*wave_handler)(void))
+{
+	/* Enable the peripherals */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+
+	TIMER_t timer;
+	timer.base = TIMER1_BASE;
+	timer.ntimer = TIMER_A;
+	timer.config = TIMER_CFG_32_BIT_PER;
+	timer.value = value;
+	timer.interrupt = INT_TIMER1A;
+	timer.intermod = TIMER_TIMA_TIMEOUT;
+	timer.handler = wave_handler;
+	TIMER_init(&timer);
+
+	/* Eable output pin */
+    SysCtlPeripheralEnable(WAVE_INT_PPER);
+    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, WAVE_INT_PIN);
+	GPIOPinWrite(GPIO_PORTD_BASE, WAVE_INT_PIN, 0);
+}
+
+/* wave_interrupt_load - load the timer interrupt value
+ */
+void wave_interrupt_load(unsigned long value)
+{
+	TimerLoadSet(TIMER1_BASE, TIMER_A, value);
+}		/* -----  end of function wave_interrupt_load  ----- */
+
+/* wave_interrupt_start - start counter
+ */
+void wave_interrupt_start(void)
+{
+	TimerEnable(TIMER1_BASE, TIMER_A);
+}		/* -----  end of function wave_interrupt_start  ----- */
+
+/* wave_interrupt_stop -
+ */
+void wave_interrupt_stop(void)
+{
+	TimerDisable(TIMER1_BASE, TIMER_A);
+}		/* -----  end of function wave_interrupt_stop  ----- */
+
+/* wave_interrupt_clean -
+*/
+void wave_interrupt_clean(void)
+{
+	TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
+}		/* -----  end of function wave_interrupt_clean  ----- */

@@ -56,8 +56,21 @@ void timer_capture_handler(void)
 	TimerLoadSet(TIMER0_BASE, TIMER_A, 0xffff);
 	TimerIntClear(TIMER0_BASE, TIMER_CAPA_EVENT);
 	
+	/* get the wave form */
 	i = i%TIMER_VALUE_DEEPIN;
 
+	/* follower wave pin */
+	WAVE_INT_OU;
+	/* Enable the follower wave */
+	wave_interrupt_start();
+}
+
+void timer_interrupt_handler(void)
+{
+	wave_interrupt_clean();
+	/* follower wave pin */
+	WAVE_INT_OD;
+	wave_interrupt_stop();
 }
 #endif
 
@@ -88,7 +101,7 @@ int main(void)
 {
 	unsigned int count=0;
  	int m, n;
-	unsigned long tmp;
+	unsigned long tmp1, tmp2;
 
 	jtag_wait();
 
@@ -119,6 +132,7 @@ int main(void)
 
 #ifdef MODULE_CAP
 	wave_capture(timer_capture_handler);
+	wave_interrupt_init(0xffff, timer_interrupt_handler);
 #endif
 
 	/* enable systerm interrupt */
@@ -153,17 +167,24 @@ int main(void)
 #endif
 
 #ifdef MODULE_CAP
-		for (tmp = timer_cap[0], count=2; count<TIMER_VALUE_DEEPIN; count+=2)
-			tmp = (tmp + timer_cap[count]) >> 1;
+		for (tmp1 = timer_cap[0], count=2; count<TIMER_VALUE_DEEPIN; count+=2)
+			tmp1 = (tmp1 + timer_cap[count]) >> 1;
 
- 		sprintf(string, "CAP: %6ld", tmp);
+ 		sprintf(string, "CAP: %6ld", tmp1);
 		menu_add_string(i++, string);
 
-		for (tmp = timer_cap[1], count=3; count<TIMER_VALUE_DEEPIN; count+=2)
-			tmp = (tmp + timer_cap[count]) >> 1;
+		for (tmp2 = timer_cap[1], count=3; count<TIMER_VALUE_DEEPIN; count+=2)
+			tmp2 = (tmp2 + timer_cap[count]) >> 1;
 
- 		sprintf(string, "CAP: %6ld", tmp);
+ 		sprintf(string, "CAP: %6ld", tmp2);
 		menu_add_string(i, string);
+
+		/* which is zero point */
+		if (tmp1 > tmp2)
+			tmp1 = tmp2;
+
+		/* load value to follower wave */
+		wave_interrupt_load(tmp1);
 #endif
 
 

@@ -29,7 +29,7 @@ void TIMER_init(TIMER_t *timer)
 		/* Setup the interrupt for the timer timeouts */
 		IntEnable(timer->interrupt);
 		/* Enable the timer */
-		TimerEnable(timer->base, timer->ntimer);
+/* 		TimerEnable(timer->base, timer->ntimer); */
 	}
 
 }		/* -----  end of function TIMER_init  ----- */

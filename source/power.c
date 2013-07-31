@@ -1,4 +1,8 @@
-#include "stdlib.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "hw_ints.h"
 #include "hw_memmap.h"
 #include "hw_types.h"
@@ -9,14 +13,17 @@
 #include "src/gpio.h"
 
 /* module */
-#define MODULE_TIMER
+/* #define MODULE_SPWM */
 #define MODULE_LCD
+#define MODULE_PWM
 #define MODULE_PLL
+#define MODULE_ADS
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
-/* #define MODULE_STDLIB */
 
-#ifdef MODULE_STDLIB
+
+#ifdef MODULE_ADS
+#include "periph/ads1115.h"
 #endif
 
 #ifdef MODULE_LCD
@@ -33,11 +40,7 @@
 #include "periph/button.h"
 #endif
 
-#ifdef MODULE_TIMER
-#include "system/sys_timer.h"
-#include "data/spwm.h"
-unsigned char spwm[256];
-#endif
+#include "wave.h"
 
 /* #include "data/sin.h" */
 
@@ -63,36 +66,10 @@ void jtag_wait(void)
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 }
 
-#ifdef MODULE_TIMER
-void Timer0IntHandler(void)
-{
-	static unsigned char count = 0, i = 0;
-
-	if (i == 0) {
-		TimerLoadSet(TIMER0_BASE, TIMER_A, (spwm[count])+0xf);
-		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 1);
-
-		i++;
-
-		if ((count==128) || (count==0))
-			GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_2,
-					~GPIOPinRead(GPIO_PORTD_BASE, GPIO_PIN_2));
-	} else {
-		TimerLoadSet(TIMER0_BASE, TIMER_A, (0xff - spwm[count])+0xf);
-		GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0, 0);
-
-		i=0;
-		count++;
-	}
-	/* Clear the timer interrupt */
-	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-}
-#endif
-
 
 int main(void)
 {
- 	int n;
+ 	int m, n;
 
 	jtag_wait();
 
@@ -117,49 +94,43 @@ int main(void)
 #ifdef MODULE_BUTTON
 #endif
 
-#ifdef MODULE_TIMER
-	for (n=0; n < 255; n++) {
-		spwm[n] = 0xff - spwm_data[n];
-	}
-	/* Enable the peripherals */
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	/* Set GPIO B0 as an output */
-    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2);
-	GPIOPinWrite(GPIO_PORTD_BASE, GPIO_PIN_0 | GPIO_PIN_2, 0);
-
-	TIMER_t timer;
-	timer.base = TIMER0_BASE;
-	timer.ntimer = TIMER_A;
-	timer.config = TIMER_CFG_32_BIT_PER;
-	timer.value = SysCtlClockGet() / 1000;
-	timer.interrupt = INT_TIMER0A;
-	timer.intermod = TIMER_TIMA_TIMEOUT;
-	timer.handler = Timer0IntHandler;
-	TIMER_init(&timer);
+#ifdef MODULE_SPWM
+	wave_spwm();
 #endif
 
 	/* enable systerm interrupt */
  	IntMasterEnable();
 
-	/* TIMER_init_capture(); */
-	/* DAC_init_gpio(); */
-	/* TIMER_init_pwm(); */
-	/* TIMER_init_clk(); */
-
-
 #ifdef MODULE_DAC_5618
 	DAC_write_data(0x1ff, 1);
 #endif
 
+
+#ifdef MODULE_PWM
+	wave_pwm(10000, 80000);
+#endif
+
 	while(1) {
+#ifdef MODULE_ADS
+		int i, j;
+		char string[30];
+		unsigned int ads_value;
+
+		for (i=0; i<4; i++) {
+			for (j = 10; j; j--)
+				ads_value = ads_read(i);
+
+			sprintf(string, "ADC%d: %6d", i,  ads_value);
+			menu_add_string(i, string);
+		}
+
+#endif
 #ifdef MODULE_LCD
-/*   		menu_roll(); */
-		menu_refresh();
-		/* left roll the screen */
-		/* 		fb_place = display_roll(&fb,fb_place,80,1, 8); */
-		/* right roll the screen */
-		/* 		fb_place = display_roll(&fb,fb_place,80,0, 8); */
+		m = menu_refresh();
+		if (n != m) {
+			n = m;
+			wave_pwm((n+1)*10000, 80000);
+		}
 #endif
 	}
 

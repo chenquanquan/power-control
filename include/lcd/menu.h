@@ -10,6 +10,7 @@
 
 extern void menu_start(void);
 extern int menu_roll(int screen);
-extern void menu_refresh(void);
+extern int menu_refresh(void);
 extern void menu_end(void);
+extern void menu_add_string(int num, const char *string);
 #endif /* __MENU_H__ */

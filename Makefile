@@ -107,6 +107,9 @@ ${COMPILER}/power.axf: ${COMPILER}/button.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_pwm.o
 ${COMPILER}/power.axf: ${COMPILER}/sys_timer.o
 ${COMPILER}/power.axf: ${COMPILER}/menu.o
+${COMPILER}/power.axf: ${COMPILER}/wave.o
+${COMPILER}/power.axf: ${COMPILER}/iic.o
+${COMPILER}/power.axf: ${COMPILER}/ads1115.o
 
 # ${COMPILER}/power.axf: ${COMPILER}/button.o
 # ${COMPILER}/power.axf: ${COMPILER}/menu.o

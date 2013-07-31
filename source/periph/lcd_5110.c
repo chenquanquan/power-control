@@ -109,7 +109,7 @@ void LCD_draw_frame_buffer(int start_row, int start_column,
 							unsigned char *frame_buffer, int column_max)
 {
 	int i, column, row;
-	int row_max = start_row + column_max * 6;
+	int row_max = (start_row + 6 ) * column_max;
 
 	LCD_set_pos(0, 0);
 	/* enable LCD */

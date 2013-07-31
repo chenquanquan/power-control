@@ -46,7 +46,10 @@ int menu_roll(int screen)
 	static int now_screen=0;
 	static int fb_place = 0;
 
-	if (screen > now_screen) {
+	/* refresh screen */
+	if (screen == now_screen) {
+		fb_place = display_roll(&fb, fb_place, 0, 0, 0);
+	} else if (screen > now_screen) {
 		/* left roll the screen */
 		fb_place = display_roll(&fb,fb_place,1,1, 1);
 		fb_place = display_roll(&fb,fb_place,7,1, 7);
@@ -73,8 +76,8 @@ int menu_roll(int screen)
 
 /*  menu_refresh - refresh the display with button
 */
-extern unsigned int gpio_b_int_status;
-void menu_refresh(void)
+extern volatile unsigned int gpio_b_int_status;
+int menu_refresh(void)
 {
 	static int screen = 0;
 	static int i = 0;
@@ -118,4 +121,21 @@ void menu_refresh(void)
 	}
 
 	menu_roll(screen);
+
+	return screen;
 }		/* -----  end of function menu_refresh  ----- */
+
+/* menu_add_string - add string on framebuffer
+*/
+void menu_add_string(int num, const char *string)
+{
+	int x=0, y=0;
+	int screen;
+
+	/* the screen filled */
+	screen = num / 6;
+	x = num % 6;
+	y = 84 * screen;
+
+	display_add_string(&fb, x, y, string);
+}		/* -----  end of function menu_add_string  ----- */

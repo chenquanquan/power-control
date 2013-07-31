@@ -48,12 +48,12 @@ void display_start(frame_buffer_t *frame_buffer)
  *  roll: roll scope.
  *  dirctrion: roll dirction.
  */
-extern int button_count;
+extern volatile int button_count;
 int display_roll(frame_buffer_t *frame_buffer, int place, int roll, int dirction, int step)
 {
-	int i;
 	unsigned char *fb = frame_buffer->fb;
 	int column_max = frame_buffer->column_max;
+	int i = place;
 
 	/* display button interrupt count */
 	sprintf(title, "button count:%d", button_count);
@@ -61,17 +61,19 @@ int display_roll(frame_buffer_t *frame_buffer, int place, int roll, int dirction
 
 	/* roll left */
 	if (dirction) {
-		for (i=place; i<place+roll;) {
-			sprintf(title, "%d,fixed position roll left:%d", i, i);
-			fb_write_char(3,0,title, fb, column_max); 
+		while (i<place+roll) {
+/* 			sprintf(title, "%d,fixed position roll left:%d", i, i);
+ * 			fb_write_char(3,0,title, fb, column_max); 
+ */
 
 			LCD_draw_frame_buffer(0,i,fb,column_max);
 			i += step;
 		}
 	} else {  /* roll right */
-		for (i=place; i>place-roll;) {
-			sprintf(title, "%d,fixed position roll right:%d", i, i);
-			fb_write_char(4,0,title, fb, column_max); 
+		while (i>place-roll) {
+/* 			sprintf(title, "%d,fixed position roll right:%d", i, i);
+ * 			fb_write_char(4,0,title, fb, column_max); 
+ */
 
 			LCD_draw_frame_buffer(0,i,fb,column_max);
 			i -= step;
@@ -92,3 +94,14 @@ void display_boxes(frame_buffer_t *frame_buffer,int x, int y, int length, int wi
 	fb_write_dollop(x,y,x+length,y+width,fb,column_max);
 	fb_negation_dollop(x+1,x+y,x+length-1,y+width-1,fb,column_max);
 }		/* -----  end of function display_boxes  ----- */
+
+/* display_add_string -
+*/
+void display_add_string(frame_buffer_t *frame_buffer, int x, int y, const char *string)
+{
+	unsigned char *fb = frame_buffer->fb;
+	int column_max = frame_buffer->column_max;
+
+	fb_write_char(x,y,string, fb, column_max); 
+
+}		/* -----  end of function display_add_string  ----- */

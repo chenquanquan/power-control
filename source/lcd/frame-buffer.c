@@ -116,7 +116,7 @@ extern unsigned char lcd_font[96][5];
  * screen = (16+4/5) * 6 word.
  */ 
 
-void fb_write_char(int row, int column, char *ptrc, unsigned char *fb, int column_max)
+void fb_write_char(int row, int column, const char *ptrc, unsigned char *fb, int column_max)
 {
 	int i, j, n;
 	unsigned char word;

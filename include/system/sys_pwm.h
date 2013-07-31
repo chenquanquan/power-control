@@ -2,6 +2,8 @@
 #define __SYS_PWM_H__
 
 typedef struct { 
+	unsigned long gpio_base;
+	unsigned long gpio_periph;
 	unsigned long gpio;
 	unsigned long gen; /*	PWM_GEN_0
 							PWM_GEN_1
@@ -27,7 +29,16 @@ typedef struct {
 							 PWM_GEN_MODE_GEN_SYNC_GLOBAL */
 	unsigned long period; /* ulPeriod = SysCtlClockGet() / 50000; */
 	unsigned long width;
-	unsigned long out; /* PWM_OUT_0_BIT
+	unsigned long out; /* PWM_OUT_0
+						  PWM_OUT_1
+						  PWM_OUT_2
+						  PWM_OUT_3
+						  PWM_OUT_4
+						  PWM_OUT_5
+						  PWM_OUT_6
+						  PWM_OUT_7
+						*/
+	unsigned long outbit; /* PWM_OUT_0_BIT
 						  PWM_OUT_1_BIT
 						  PWM_OUT_2_BIT
 						  PWM_OUT_3_BIT

@@ -21,14 +21,14 @@ void PWM_init(PWM_t *pwm)
 {
 	/* Enable the peripherals used by this example */
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-    GPIOPinTypePWM(GPIO_PORTD_BASE, pwm->gpio);
+    SysCtlPeripheralEnable(pwm->gpio_periph);
+    GPIOPinTypePWM(pwm->gpio_base, pwm->gpio);
     PWMGenConfigure(PWM_BASE, pwm->gen, pwm->config);
 	/* Set PWM period */
 	PWMGenPeriodSet(PWM_BASE, pwm->gen, pwm->period);
 	/* Set PWM Width */
     PWMPulseWidthSet(PWM_BASE, pwm->out, pwm->width);
-    PWMOutputState(PWM_BASE, pwm->out, true);
+    PWMOutputState(PWM_BASE, pwm->outbit, true);
 	/* if interrupt handler set */
 	if (pwm->handler) {
 		PWMGenIntTrigEnable(PWM_BASE, pwm->intergen, pwm->trig);

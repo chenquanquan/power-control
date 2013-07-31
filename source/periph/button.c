@@ -45,8 +45,8 @@ unsigned char button_test(unsigned char button)
 
 /* GPIO_B_routine() - GPIO B interrupt routine
  */
-unsigned int gpio_b_int_status;
-unsigned int button_count = 0;
+volatile unsigned int gpio_b_int_status;
+volatile unsigned int button_count = 0;
 void GPIO_B_routine(void)
 {
 	unsigned int status;

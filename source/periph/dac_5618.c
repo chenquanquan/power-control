@@ -1,5 +1,4 @@
 /* driver for tlv5618
- * 2012.7.24
  */
 #include "hw_ints.h"
 #include "hw_memmap.h"
@@ -62,10 +61,8 @@ void DAC_write_data(unsigned short dat, int channel)
 	for (i = 0; i < 16; i++) {
 		DAC_CLK_L;
 
-		if (dat & 0x8000)
-			DAC_DAT_H;
-		else
-			DAC_DAT_L;
+		if (dat & 0x8000) DAC_DAT_H;
+		else DAC_DAT_L;
 
 		dat <<= 1;
 		DAC_CLK_H;

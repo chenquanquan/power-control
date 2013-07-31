@@ -20,13 +20,14 @@ void TIMER_init(TIMER_t *timer)
 {
 	/* Configure timers mode */
 	TimerConfigure(timer->base, timer->config);
+	TimerControlEvent(timer->base, timer->ntimer, timer->event_config);
 	TimerLoadSet(timer->base, timer->ntimer, timer->value);
 	if (timer->handler) {
+		TimerIntEnable(timer->base, timer->intermod);
 		/* Registe timer handler */
 		TimerIntRegister(timer->base, timer->ntimer, timer->handler);
 		/* Setup the interrupt for the timer timeouts */
 		IntEnable(timer->interrupt);
-		TimerIntEnable(timer->base, timer->intermod);
 		/* Enable the timer */
 		TimerEnable(timer->base, timer->ntimer);
 	}

@@ -18,6 +18,7 @@
 #define MODULE_PWM
 #define MODULE_PLL
 #define MODULE_ADS
+#define MODULE_CAP
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 
@@ -40,9 +41,25 @@
 #include "periph/button.h"
 #endif
 
+#ifdef MODULE_PWM
 #include "wave.h"
+#endif
 
-/* #include "data/sin.h" */
+#ifdef MODULE_CAP
+#define TIMER_VALUE_DEEPIN (16)
+volatile unsigned long timer_cap[TIMER_VALUE_DEEPIN];
+void timer_capture_handler(void)
+{
+	static unsigned char i = 0;
+
+	timer_cap[i++] = TimerValueGet(TIMER0_BASE, TIMER_A);
+	TimerLoadSet(TIMER0_BASE, TIMER_A, 0xffff);
+	TimerIntClear(TIMER0_BASE, TIMER_CAPA_EVENT);
+	
+	i = i%TIMER_VALUE_DEEPIN;
+
+}
+#endif
 
 #ifdef DEBUG
 void
@@ -69,7 +86,9 @@ void jtag_wait(void)
 
 int main(void)
 {
+	unsigned int count=0;
  	int m, n;
+	unsigned long tmp;
 
 	jtag_wait();
 
@@ -98,6 +117,10 @@ int main(void)
 	wave_spwm();
 #endif
 
+#ifdef MODULE_CAP
+	wave_capture(timer_capture_handler);
+#endif
+
 	/* enable systerm interrupt */
  	IntMasterEnable();
 
@@ -111,12 +134,14 @@ int main(void)
 #endif
 
 	while(1) {
+#ifdef MODULE_LCD
+
 #ifdef MODULE_ADS
 		int i, j;
 		char string[30];
 		unsigned int ads_value;
 
-		for (i=0; i<4; i++) {
+		for (i=0; i<3; i++) {
 			for (j = 10; j; j--)
 				ads_value = ads_read(i);
 
@@ -124,17 +149,38 @@ int main(void)
 			menu_add_string(i, string);
 		}
 
+
 #endif
-#ifdef MODULE_LCD
+
+#ifdef MODULE_CAP
+		for (tmp = timer_cap[0], count=2; count<TIMER_VALUE_DEEPIN; count+=2)
+			tmp = (tmp + timer_cap[count]) >> 1;
+
+ 		sprintf(string, "CAP: %6ld", tmp);
+		menu_add_string(i++, string);
+
+		for (tmp = timer_cap[1], count=3; count<TIMER_VALUE_DEEPIN; count+=2)
+			tmp = (tmp + timer_cap[count]) >> 1;
+
+ 		sprintf(string, "CAP: %6ld", tmp);
+		menu_add_string(i, string);
+#endif
+
+
 		m = menu_refresh();
+
+#ifdef MODULE_PWM
 		if (n != m) {
 			n = m;
 			wave_pwm((n+1)*10000, 80000);
 		}
 #endif
+#endif
 	}
 
+#ifdef MODULE_LCD
 	menu_end();
+#endif
 
 	return 0;
 }

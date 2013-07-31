@@ -19,4 +19,5 @@
 
 extern void wave_spwm(void);
 extern void wave_pwm(unsigned long period1, unsigned long period2);
+extern void wave_capture(void (*capture_handler)(void));
 #endif /* __WAVE_H__ */

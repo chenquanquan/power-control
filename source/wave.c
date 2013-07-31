@@ -14,6 +14,7 @@
 #include "src/timer.h"
 #include "src/gpio.h"
 #include "src/pwm.h"
+#include "src/pin_map.h"
 
 #include "wave.h"
 #include "system/sys_timer.h"
@@ -118,3 +119,29 @@ void wave_pwm(unsigned long period1, unsigned long period2)
 	pwm2.handler = 0;
  	PWM_init(&pwm2);
 }		/* -----  end of function wave_pwm  ----- */
+
+/* wave_capture -
+*/
+void wave_capture(void (*capture_handler)(void))
+{
+	TIMER_t timer;
+
+	/* Enable the peripherals */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    SysCtlPeripheralEnable(CCP0_PERIPH);
+	/* Set GPIO B0 as an output */
+	GPIOPinTypeTimer(CCP0_PORT, CCP0_PIN);
+
+	/* configure timer structure */
+	timer.base = TIMER0_BASE;
+	timer.ntimer = TIMER_A;
+	/* Timer A event timer and Two 16-bit timers */
+	timer.config = TIMER_CFG_A_CAP_TIME | TIMER_CFG_16_BIT_PAIR;
+	timer.event_config = TIMER_EVENT_BOTH_EDGES;
+	timer.value = 0xffff;
+	timer.interrupt = INT_TIMER0A;
+	/* CaptureA event interrupt */
+	timer.intermod = TIMER_CAPA_EVENT;
+	timer.handler = capture_handler;
+	TIMER_init(&timer);
+}		/* -----  end of function wave_capture  ----- */

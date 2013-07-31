@@ -28,6 +28,7 @@ typedef struct {
 	unsigned long base;
 	unsigned long ntimer;
 	unsigned long config;
+	unsigned long event_config;
 	unsigned long value;
 	unsigned long interrupt;
 	unsigned long intermod;

@@ -29,8 +29,8 @@
 #
 # Defines the part type that this project uses.
 #
-#PART=LM3S811
-PART=LM3S1138
+PART=LM3S811
+#PART=LM3S1138
 NAME=power
 VERSION=1
 SUBLEVEL=1

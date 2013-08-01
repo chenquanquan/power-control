@@ -30,6 +30,7 @@ typedef struct {
 	unsigned long config;
 	unsigned long event_config;
 	unsigned long value;
+	unsigned long prescale;
 	unsigned long interrupt;
 	unsigned long intermod;
 	void (*handler)(void);

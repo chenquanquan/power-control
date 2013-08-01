@@ -143,12 +143,88 @@ void wave_capture(void (*capture_handler)(void))
 	timer.event_config = TIMER_EVENT_BOTH_EDGES;
 	timer.value = 0xffff;
 	timer.interrupt = INT_TIMER0A;
+	timer.prescale = 0;
 	/* CaptureA event interrupt */
 	timer.intermod = TIMER_CAPA_EVENT;
 	timer.handler = capture_handler;
 	TIMER_init(&timer);
+
 	TimerEnable(timer.base, timer.ntimer);
 }		/* -----  end of function wave_capture  ----- */
+
+/* wave_capture_32 - wave capture by timer
+ * @capture_handler: the handler function for capture.
+ * enable timer0 channel A and CCP0(PA0).
+ * capture all of edges. both positive edges and negative edges.
+ */
+void wave_cap32(void (*capture_handler)(void))
+{
+	TIMER_t timer;
+
+	/* Enable the peripherals */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    SysCtlPeripheralEnable(WAVE_32_PERIPH);
+	/* configure GPIO in input */
+	GPIOPinTypeGPIOInput(WAVE_32_PORT, WAVE_32_PIN);
+	/* configure interrupt type */
+	GPIOIntTypeSet(WAVE_32_PORT, WAVE_32_PIN, GPIO_BOTH_EDGES);
+
+	/* register the interrupt handler */
+	GPIOPortIntRegister(WAVE_32_PORT, capture_handler);
+	/* enable the pin interrupt */
+	GPIOPinIntEnable(WAVE_32_PORT, WAVE_32_PIN);
+
+	/* configure timer structure */
+	timer.base = TIMER0_BASE;
+	timer.ntimer = TIMER_A;
+	timer.config = TIMER_CFG_32_BIT_PER;
+	timer.value = 0xffffffff;
+	timer.event_config = 0xffffffff;
+	timer.prescale = 0;
+	TIMER_init(&timer);
+
+	/* enable the port interrupt */
+	TimerEnable(timer.base, timer.ntimer);
+	IntEnable(WAVE_32_INT);
+}		/* -----  end of function wave_capture  ----- */
+
+/* wave_cap32_load - load the timer interrupt value
+ */
+void wave_cap32_load(unsigned long value)
+{
+	TimerLoadSet(TIMER0_BASE, TIMER_A, value);
+}		/* -----  end of function wave_interrupt_load  ----- */
+
+/* wave_cap32_start - start counter
+ */
+void wave_cap32_start(void)
+{
+	TimerEnable(TIMER0_BASE, TIMER_A);
+}		/* -----  end of function wave_interrupt_start  ----- */
+
+/* wave_cap32_stop -
+ */
+void wave_cap32_stop(void)
+{
+	TimerDisable(TIMER0_BASE, TIMER_A);
+}		/* -----  end of function wave_interrupt_stop  ----- */
+
+/* wave_cap32_getvalue -
+*/
+unsigned long wave_cap32_getvalue(void)
+{
+	return (0xffffffff - TimerValueGet(TIMER0_BASE, TIMER_A));
+}		/* -----  end of function wave_cap32_getvalue  ----- */
+
+/* wave_cap32_clean -
+*/
+void wave_cap32_clean(void)
+{
+	unsigned int status;
+
+	status = GPIOPinIntStatus(WAVE_32_PORT, true);
+	GPIOPinIntClear(WAVE_32_PORT, status);
+}		/* -----  end of function wave_interrupt_clean  ----- */
 
 /* wave_interrupt_init - enable a timer interrupt
  * @value: the count value.
@@ -165,13 +241,16 @@ void wave_interrupt_init(unsigned long value, void (*wave_handler)(void))
 	timer.config = TIMER_CFG_32_BIT_PER;
 	timer.value = value;
 	timer.interrupt = INT_TIMER1A;
+	timer.prescale = 0;
 	timer.intermod = TIMER_TIMA_TIMEOUT;
 	timer.handler = wave_handler;
 	TIMER_init(&timer);
 
 	/* Eable output pin */
-    SysCtlPeripheralEnable(WAVE_INT_PPER);
-    GPIOPinTypeGPIOOutput(GPIO_PORTD_BASE, WAVE_INT_PIN);
+	SysCtlPeripheralEnable(WAVE_INT_PPER);
+	GPIOPinTypeGPIOOutput(WAVE_INT_PBASE, WAVE_INT_PIN);
+	GPIOPinTypeGPIOInput(WAVE_INT_PBASE, WAVE_SCAN_PIN);
+
 	GPIOPinWrite(GPIO_PORTD_BASE, WAVE_INT_PIN, 0);
 }
 

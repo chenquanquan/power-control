@@ -20,7 +20,9 @@ void TIMER_init(TIMER_t *timer)
 {
 	/* Configure timers mode */
 	TimerConfigure(timer->base, timer->config);
-	TimerControlEvent(timer->base, timer->ntimer, timer->event_config);
+	if (timer->event_config != 0xffffffff)
+		TimerControlEvent(timer->base, timer->ntimer, timer->event_config);
+	TimerPrescaleSet(timer->base, timer->ntimer, timer->prescale);
 	TimerLoadSet(timer->base, timer->ntimer, timer->value);
 	if (timer->handler) {
 		TimerIntEnable(timer->base, timer->intermod);

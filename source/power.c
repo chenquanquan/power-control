@@ -13,14 +13,15 @@
 #include "src/gpio.h"
 
 /* module */
-/* #define MODULE_SPWM */
+#define MODULE_SPWM
 #define MODULE_LCD
 /* #define MODULE_PWM
  */
 #define MODULE_PLL
 /* #define MODULE_ADS
  */
-#define MODULE_CAP
+/* #define MODULE_CAP
+ */
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 
@@ -44,6 +45,10 @@
 #endif
 
 #ifdef MODULE_PWM
+#include "wave.h"
+#endif
+
+#ifdef MODULE_SPWM
 #include "wave.h"
 #endif
 
@@ -86,7 +91,6 @@ void timer_cap32_handler(void)
 
 	wave_cap32_clean();
 
-#if 1
 	wave_cap32_stop();
 	timer_cap[i++] = wave_cap32_getvalue();
 	wave_cap32_load(0xffffffff);
@@ -104,8 +108,6 @@ void timer_cap32_handler(void)
 		/* timer interrupt to output follower wave */
 		timer_cmd = TIMER_CMD_FW;
 	}
-#endif
-
 }
 
 void timer_interrupt_handler(void)
@@ -113,7 +115,6 @@ void timer_interrupt_handler(void)
 	wave_interrupt_clean();
 	wave_interrupt_stop();
 
-#if	1
 	switch (timer_cmd) {
 		case TIMER_CMD_FW:
 			/* follower wave pin */
@@ -136,9 +137,6 @@ void timer_interrupt_handler(void)
 		default:
 			break;
 	}
-#else
-	WAVE_INT_OD;
-#endif
 }
 #endif
 
@@ -167,8 +165,8 @@ void jtag_wait(void)
 
 int main(void)
 {
+	unsigned char width=0;
 	unsigned int count=0;
- 	int m, n;
 	unsigned long tmp1, tmp2;
 
 	jtag_wait();
@@ -195,6 +193,7 @@ int main(void)
 #endif
 
 #ifdef MODULE_SPWM
+#include "src/pwm.h"
 	wave_spwm();
 #endif
 
@@ -218,7 +217,7 @@ int main(void)
 
 	while(1) {
 #ifdef MODULE_LCD
-		int i, j;
+		int i=0, j=1;
 		char string[30];
 
 #ifdef MODULE_ADS
@@ -239,22 +238,20 @@ int main(void)
 			tmp1 = (tmp1 + timer_cap[count]) >> 1;
 
  		sprintf(string, "CAP: %6ld", tmp1);
-		menu_add_string(i++, string);
+		menu_add_string(i, string);
 
 		for (tmp2 = timer_cap[1], count=3; count<TIMER_VALUE_DEEPIN; count+=2)
 			tmp2 = (tmp2 + timer_cap[count]) >> 1;
 
  		sprintf(string, "CAP: %6ld", tmp2);
-		menu_add_string(i, string);
-		
-		i = 0;
+		menu_add_string(j, string);
 
 		/* load value to follower wave */
 		timer_cap[TIMER_VALUE_DEEPIN] = (tmp1<tmp2?tmp1:tmp2) >> 1;
 		timer_cap[TIMER_VALUE_DEEPIN+1] = (tmp1>tmp2?tmp1:tmp2) >> 1;
 #endif
 
-
+		int m, n;
 		m = menu_refresh();
 
 #ifdef MODULE_PWM

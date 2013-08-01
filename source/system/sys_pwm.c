@@ -23,6 +23,7 @@ void PWM_init(PWM_t *pwm)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM);
     SysCtlPeripheralEnable(pwm->gpio_periph);
     GPIOPinTypePWM(pwm->gpio_base, pwm->gpio);
+	/* Configure for PWM */
     PWMGenConfigure(PWM_BASE, pwm->gen, pwm->config);
 	/* Set PWM period */
 	PWMGenPeriodSet(PWM_BASE, pwm->gen, pwm->period);
@@ -31,9 +32,10 @@ void PWM_init(PWM_t *pwm)
     PWMOutputState(PWM_BASE, pwm->outbit, true);
 	/* if interrupt handler set */
 	if (pwm->handler) {
-		PWMGenIntTrigEnable(PWM_BASE, pwm->intergen, pwm->trig);
-		PWMGenIntRegister(PWM_BASE, pwm->intergen, pwm->handler);
-		PWMIntEnable(PWM_BASE, pwm->intergen);
+		PWMGenIntTrigEnable(PWM_BASE, pwm->gen, pwm->trig);
+		PWMGenIntRegister(PWM_BASE, pwm->gen, pwm->handler);
+		PWMIntEnable(PWM_BASE, pwm->gen);
+		IntEnable(pwm->interrupt);
 	}
     PWMGenEnable(PWM_BASE, pwm->gen);
 }		/* -----  end of function PWM_init  ----- */

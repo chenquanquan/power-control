@@ -20,58 +20,59 @@
 #include "system/sys_timer.h"
 #include "system/sys_pwm.h"
 #include "data/spwm.h"
-unsigned char spwm[256];
+unsigned char spwm[512];
 
-void timer0_spwm_handler(void)
+void pwm_spwm_handler(void)
 {
-	static unsigned char count = 0, i = 0;
+	static unsigned int count=0;
+	static unsigned int i=0;
 
-	if (i == 0) {
-		TimerLoadSet(TIMER0_BASE, TIMER_A, (spwm[count])+0xf);
-		GPIOPinWrite(SPWM_GPIO_BASE, SPWM_PIN_2, 1);
+	PWMGenIntClear(PWM_BASE, PWM_GEN_0, PWM_INT_GEN_0);
 
-		i++;
+	if (count == 0) {
+		PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm[i]+0x1);
+		i+= 1;
+		i %= 512;
 
-		if ((count==128) || (count==0))
-			GPIOPinWrite(SPWM_GPIO_BASE, SPWM_PIN_1,
-					~GPIOPinRead(SPWM_GPIO_BASE, SPWM_PIN_1));
-	} else {
-		TimerLoadSet(TIMER0_BASE, TIMER_A, (0xff - spwm[count])+0xf);
-		GPIOPinWrite(SPWM_GPIO_BASE, SPWM_PIN_2, 0);
-
-		i=0;
-		count++;
 	}
-	/* Clear the timer interrupt */
-	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+	count++;
+	count %= 2;
 }
 
 
-/* wave_spwm - (failed)
+/* wave_spwm - output a spwm
 */
 void wave_spwm(void)
 {
 	int n;
 
 	for (n=0; n < 255; n++) {
-		spwm[n] = 0xff - spwm_data[n];
+		spwm[n] = spwm_data[n];
 	}
-	/* Enable the peripherals */
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	/* Set GPIO B0 as an output */
-    GPIOPinTypeGPIOOutput(SPWM_GPIO_BASE, SPWM_MASK);
-	GPIOPinWrite(SPWM_GPIO_BASE, SPWM_MASK, 0);
+	for (n=0; n < 255; n++) {
+		spwm[n+0xff] = 0xff - spwm_data[n];
+	}
 
-	TIMER_t timer;
-	timer.base = TIMER0_BASE;
-	timer.ntimer = TIMER_A;
-	timer.config = TIMER_CFG_32_BIT_PER;
-	timer.value = SysCtlClockGet() / 1000;
-	timer.interrupt = INT_TIMER0A;
-	timer.intermod = TIMER_TIMA_TIMEOUT;
-	timer.handler = timer0_spwm_handler;
-	TIMER_init(&timer);
+
+
+	PWM_t pwm1;
+
+	/* Configure pwm counter */
+	pwm1.gpio_periph = SYSCTL_PERIPH_GPIOD;
+	pwm1.gpio_base = GPIO_PORTD_BASE;
+	pwm1.gpio = GPIO_PIN_0;
+	pwm1.gen = PWM_GEN_0;
+	pwm1.config = PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC;
+	pwm1.period = 0xff;
+	pwm1.width = pwm1.period / 2;
+	pwm1.out = PWM_OUT_0;
+	pwm1.outbit = PWM_OUT_0_BIT;
+	/* Configure for pwm interrupt */
+	pwm1.trig = PWM_INT_CNT_ZERO;
+	pwm1.intergen = PWM_INT_GEN_0;
+	pwm1.handler = pwm_spwm_handler;
+	pwm1.interrupt = INT_PWM0;
+	PWM_init(&pwm1);
 }
 
 /* wave_pwm - output two pwm

@@ -240,6 +240,8 @@ ${COMPILER}/%.axf:
 	      ${LDFLAGS} -o ${@} $(filter %.o %.a, ${^})                      \
 	      '${LIBC}' '${LIBGCC}'
 	@${OBJCOPY} -O binary ${@} ${@:.axf=.bin}
+#for gdb
+	cp ${@}${LNK_SCP} ../gdb
 endif
 
 #******************************************************************************

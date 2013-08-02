@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "lcd/display.h"
 #include "periph/button.h"
+#include "wave.h"
 
 unsigned char frame_buffer[FRAME_BUFFER_ROW_MAX][FRAME_BUFFER_COLUMN_MAX];
 frame_buffer_t fb;
@@ -41,6 +42,7 @@ void menu_end(void)
 /*  menu_roll - roll the display to screen
  *  return now screen.
 */
+unsigned char pwm_step;
 int menu_roll(int screen)
 {
 	static int now_screen=0;
@@ -70,8 +72,10 @@ int menu_roll(int screen)
 		fb_place = display_roll(&fb,fb_place,1,0, 1);
 		now_screen--;
 	}
-	return now_screen;
+	/* set pwm counter step */
+	pwm_step = (now_screen+1) * 2;
 
+	return now_screen;
 }		/* -----  end of function menu_roll  ----- */
 
 /*  menu_refresh - refresh the display with button
@@ -105,7 +109,9 @@ int menu_refresh(void)
 #endif
 	if (gpio_b_int_status && !button_test(BUTTON_4)) {
 		if  (i == 0) {
-			if (screen < (FRAME_BUFFER_SCREEN - 1) ) screen++;
+			if (screen < (FRAME_BUFFER_SCREEN - 1) ) {
+				screen++;
+			}
 			else {
 				i=1;
 				screen--;

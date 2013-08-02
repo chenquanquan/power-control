@@ -20,8 +20,8 @@
 #define MODULE_PLL
 /* #define MODULE_ADS
  */
-/* #define MODULE_CAP
- */
+#define MODULE_CAP
+
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 

@@ -20,20 +20,30 @@
 #include "system/sys_timer.h"
 #include "system/sys_pwm.h"
 #include "data/spwm.h"
-unsigned char spwm[512];
-
+unsigned char spwm_a[1024];
+unsigned char spwm_b[1024];
+unsigned char pwm_step=1;
 void pwm_spwm_handler(void)
 {
 	static unsigned int count=0;
-	static unsigned int i=0;
+	static unsigned int i=0, j=0;
 
 	PWMGenIntClear(PWM_BASE, PWM_GEN_0, PWM_INT_GEN_0);
 
-	if (count == 0) {
-		PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm[i]+0x1);
-		i+= 1;
-		i %= 512;
 
+	if (count == 0) {
+		if (i<1024) {
+			PWM_OD;
+			PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_a[i]+0x1);
+			i+= pwm_step;
+		} else {
+			PWM_OU;
+			PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_b[j]+0x1);
+			j+= pwm_step;
+		}
+		if (j > 1024) {
+			i = j = 0;
+		}
 	}
 	count++;
 	count %= 2;
@@ -45,17 +55,21 @@ void pwm_spwm_handler(void)
 void wave_spwm(void)
 {
 	int n;
-
-	for (n=0; n < 255; n++) {
-		spwm[n] = spwm_data[n];
-	}
-	for (n=0; n < 255; n++) {
-		spwm[n+0xff] = 0xff - spwm_data[n];
-	}
-
-
-
 	PWM_t pwm1;
+
+	/* sin wave data */
+	for (n=0; n < 512; n++) {
+		spwm_a[n] = spwm_data[n];
+		spwm_a[1023-n] = spwm_data[n];
+	}
+	for (n=0; n < 512; n++) {
+		spwm_b[n] = 0xff - spwm_data[n];
+		spwm_b[1023-n] = 0xff - spwm_data[n];
+	}
+
+	/* Configure for GPIO */
+    SysCtlPeripheralEnable(PWM_PIN_PERIPH);
+	GPIOPinTypeGPIOOutput(PWM_PORT, PWM_PIN);
 
 	/* Configure pwm counter */
 	pwm1.gpio_periph = SYSCTL_PERIPH_GPIOD;
@@ -182,6 +196,7 @@ void wave_cap32(void (*capture_handler)(void))
 	timer.value = 0xffffffff;
 	timer.event_config = 0xffffffff;
 	timer.prescale = 0;
+	timer.handler = 0;
 	TIMER_init(&timer);
 
 	/* enable the port interrupt */
@@ -211,14 +226,14 @@ void wave_cap32_stop(void)
 }		/* -----  end of function wave_interrupt_stop  ----- */
 
 /* wave_cap32_getvalue -
-*/
+ */
 unsigned long wave_cap32_getvalue(void)
 {
 	return (0xffffffff - TimerValueGet(TIMER0_BASE, TIMER_A));
 }		/* -----  end of function wave_cap32_getvalue  ----- */
 
 /* wave_cap32_clean -
-*/
+ */
 void wave_cap32_clean(void)
 {
 	unsigned int status;
@@ -277,7 +292,7 @@ void wave_interrupt_stop(void)
 }		/* -----  end of function wave_interrupt_stop  ----- */
 
 /* wave_interrupt_clean -
-*/
+ */
 void wave_interrupt_clean(void)
 {
 	TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT);

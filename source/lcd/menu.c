@@ -42,7 +42,8 @@ void menu_end(void)
 /*  menu_roll - roll the display to screen
  *  return now screen.
 */
-unsigned char pwm_step;
+extern unsigned char pwm_step;
+extern unsigned int spwm_voltage;
 int menu_roll(int screen)
 {
 	static int now_screen=0;
@@ -73,7 +74,9 @@ int menu_roll(int screen)
 		now_screen--;
 	}
 	/* set pwm counter step */
-	pwm_step = (now_screen+1) * 2;
+	/* pwm_step = (now_screen+1) * 4; */
+	/* 	wave_spwm_load(now_screen * 0x100 + 5800); */
+	wave_spwm_data(now_screen+1);
 
 	return now_screen;
 }		/* -----  end of function menu_roll  ----- */

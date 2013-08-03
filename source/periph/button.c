@@ -34,6 +34,7 @@ void button_init_gpio(void)
 	/* enable the pin interrupt */
 /* 	GPIOPinIntEnable(BUTTON_PORT, BUTTON_MASK); */
 	GPIOPinIntEnable(BUTTON_PORT, BUTTON_4);
+	IntPrioritySet(BUTTON_INT, 1);
 	/* enable the port interrupt */
 	IntEnable(BUTTON_INT);
 }

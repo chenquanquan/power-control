@@ -20,52 +20,90 @@
 #include "system/sys_timer.h"
 #include "system/sys_pwm.h"
 #include "data/spwm.h"
+
 unsigned char spwm_a[1024];
 unsigned char spwm_b[1024];
-unsigned char pwm_step=1;
+unsigned char pwm_step=12;
+unsigned char spwm_value=0xf;
+unsigned char spwm_flag=0;
+unsigned int spwm_count_u=10;
+unsigned int spwm_count_d=10;
 void pwm_spwm_handler(void)
 {
-	static unsigned int count=0;
-	static unsigned int i=0, j=0;
 
 	PWMGenIntClear(PWM_BASE, PWM_GEN_0, PWM_INT_GEN_0);
 
-
-	if (count == 0) {
-		if (i<1024) {
+	if (spwm_flag) {
 			PWM_OD;
-			PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_a[i]+0x1);
-			i+= pwm_step;
-		} else {
+	} else {
 			PWM_OU;
-			PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_b[j]+0x1);
-			j+= pwm_step;
-		}
-		if (j > 1024) {
-			i = j = 0;
-		}
 	}
-	count++;
-	count %= 2;
+
+	/* 	IntDisable(INT_PWM0);
+	*/
+	PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_value);
+
 }
 
+void time_spwm_handler(void)
+{
+	static unsigned int wave_flag=1;
+	static unsigned int i=0, j=0;
+
+	TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+
+	if (wave_flag) {
+		spwm_value=spwm_a[i]+0x1;
+		i+=pwm_step;
+		spwm_flag=1;
+	} else {
+		spwm_value=spwm_b[j]+0x1;
+		j+=pwm_step;
+		spwm_flag=0;
+	}
+
+	if (i > 1024) {
+		i = 0;
+		/* Enable pwm interrupt for switch wave */
+		/* 		IntEnable(INT_PWM0); */
+		/* Output negative period */
+		wave_flag=0;
+	}
+	if (j > 1024) {
+		j=0;
+		/* Enable pwm interrupt for switch wave */
+		/* 		IntEnable(INT_PWM0); */
+		/* Output postive period */
+		wave_flag=1;
+	}
+
+}
+
+/* wave_spwm_data - initialize the sin data with amplitude
+ */
+void wave_spwm_data(unsigned int amplitude)
+{
+	int n;
+
+	for (n=0; n < 512; n++) {
+		spwm_a[n] = spwm_data[n]/amplitude;
+		spwm_a[1023-n] = spwm_data[n]/amplitude;
+	}
+	for (n=0; n < 512; n++) {
+		spwm_b[n] = 0xff - (spwm_data[n]/amplitude);
+		spwm_b[1023-n] = 0xff - (spwm_data[n]/amplitude);
+	}
+
+}		/* -----  end of function wave_spwm_data  ----- */
 
 /* wave_spwm - output a spwm
 */
 void wave_spwm(void)
 {
-	int n;
 	PWM_t pwm1;
 
 	/* sin wave data */
-	for (n=0; n < 512; n++) {
-		spwm_a[n] = spwm_data[n];
-		spwm_a[1023-n] = spwm_data[n];
-	}
-	for (n=0; n < 512; n++) {
-		spwm_b[n] = 0xff - spwm_data[n];
-		spwm_b[1023-n] = 0xff - spwm_data[n];
-	}
+	wave_spwm_data(1);
 
 	/* Configure for GPIO */
     SysCtlPeripheralEnable(PWM_PIN_PERIPH);
@@ -82,12 +120,47 @@ void wave_spwm(void)
 	pwm1.out = PWM_OUT_0;
 	pwm1.outbit = PWM_OUT_0_BIT;
 	/* Configure for pwm interrupt */
+#if 1
 	pwm1.trig = PWM_INT_CNT_ZERO;
 	pwm1.intergen = PWM_INT_GEN_0;
 	pwm1.handler = pwm_spwm_handler;
 	pwm1.interrupt = INT_PWM0;
 	PWM_init(&pwm1);
+/* 	IntEnable(INT_PWM0);
+ */
+	/* Configure the periority of interrupt */
+	IntPrioritySet(INT_PWM0, 3);
+#endif
+
+#if 1
+	/* Enable the peripherals */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+
+	TIMER_t timer;
+	timer.base = TIMER2_BASE;
+	timer.ntimer = TIMER_A;
+	timer.config = TIMER_CFG_32_BIT_PER;
+/* 	timer.config = TIMER_CFG_A_CAP_TIME | TIMER_CFG_16_BIT_PAIR;
+ */
+	timer.value = 5800;
+	timer.interrupt = INT_TIMER2A;
+	timer.prescale = 0;
+	timer.intermod = TIMER_TIMA_TIMEOUT;
+	timer.handler = time_spwm_handler;
+	TIMER_init(&timer);
+	/* Configure the periority of interrupt */
+	IntPrioritySet(INT_TIMER2A, 2);
+
+	TimerEnable(timer.base, timer.ntimer);
+#endif
 }
+
+/* wave_spwm_load - load the timer interrupt value
+ */
+void wave_spwm_load(unsigned long value)
+{
+	TimerLoadSet(TIMER2_BASE, TIMER_A, value);
+}		/* -----  end of function wave_spwm_load  ----- */
 
 /* wave_pwm - output two pwm
 */
@@ -209,21 +282,21 @@ void wave_cap32(void (*capture_handler)(void))
 void wave_cap32_load(unsigned long value)
 {
 	TimerLoadSet(TIMER0_BASE, TIMER_A, value);
-}		/* -----  end of function wave_interrupt_load  ----- */
+}		/* -----  end of function wave_cap32_load  ----- */
 
 /* wave_cap32_start - start counter
  */
 void wave_cap32_start(void)
 {
 	TimerEnable(TIMER0_BASE, TIMER_A);
-}		/* -----  end of function wave_interrupt_start  ----- */
+}		/* -----  end of function wave_cap32_start  ----- */
 
 /* wave_cap32_stop -
  */
 void wave_cap32_stop(void)
 {
 	TimerDisable(TIMER0_BASE, TIMER_A);
-}		/* -----  end of function wave_interrupt_stop  ----- */
+}		/* -----  end of function wave_cap32_stop  ----- */
 
 /* wave_cap32_getvalue -
  */
@@ -240,7 +313,7 @@ void wave_cap32_clean(void)
 
 	status = GPIOPinIntStatus(WAVE_32_PORT, true);
 	GPIOPinIntClear(WAVE_32_PORT, status);
-}		/* -----  end of function wave_interrupt_clean  ----- */
+}		/* -----  end of function wave_cap32_clean  ----- */
 
 /* wave_interrupt_init - enable a timer interrupt
  * @value: the count value.
@@ -268,7 +341,7 @@ void wave_interrupt_init(unsigned long value, void (*wave_handler)(void))
 	GPIOPinTypeGPIOInput(WAVE_INT_PBASE, WAVE_SCAN_PIN);
 
 	GPIOPinWrite(GPIO_PORTD_BASE, WAVE_INT_PIN, 0);
-}
+}		/* -----  end of function wave_interrupt_init  ----- */
 
 /* wave_interrupt_load - load the timer interrupt value
  */

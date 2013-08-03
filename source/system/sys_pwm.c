@@ -35,7 +35,6 @@ void PWM_init(PWM_t *pwm)
 		PWMGenIntTrigEnable(PWM_BASE, pwm->gen, pwm->trig);
 		PWMGenIntRegister(PWM_BASE, pwm->gen, pwm->handler);
 		PWMIntEnable(PWM_BASE, pwm->gen);
-		IntEnable(pwm->interrupt);
 	}
     PWMGenEnable(PWM_BASE, pwm->gen);
 }		/* -----  end of function PWM_init  ----- */

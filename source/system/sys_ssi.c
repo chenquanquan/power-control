@@ -20,3 +20,4 @@ void SSI_init_spi_16(void)
 	GPIOConfig(SSI_BASE, SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, \
 			BitRate, DataWidth);
 
+}

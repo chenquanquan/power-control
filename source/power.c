@@ -15,13 +15,10 @@
 /* module */
 #define MODULE_SPWM
 #define MODULE_LCD
-/* #define MODULE_PWM
- */
+/* #define MODULE_PWM */
 #define MODULE_PLL
-/* #define MODULE_ADS
- */
+/* #define MODULE_ADS */
 #define MODULE_CAP
-
 /* #define MODULE_DAC_5618 */
 /* #define MODULE_BUTTON */
 
@@ -58,8 +55,8 @@
 
 #define TIMER_VALUE_DEEPIN (16)
 
-#define TIMER_CMD_FW	GPIO_PIN_0
-#define TIMER_CMD_SCAN	GPIO_PIN_1
+#define TIMER_CMD_FW	0
+#define TIMER_CMD_SCAN	1
 
 volatile unsigned long timer_cap[TIMER_VALUE_DEEPIN+2];
 volatile unsigned int timer_cmd = 0;
@@ -78,7 +75,7 @@ void timer_capture_handler(void)
 	if ((GPIOPinRead(CCP0_PORT, CCP0_PIN) & CCP0_PIN) == 0) {
 		/* follower wave pin */
 		WAVE_INT_OU;
-		/* Enable the follower wave */
+		/* Enable the follfower wave */
 		wave_interrupt_start();
 		/* timer interrupt to output follower wave */
 		timer_cmd = TIMER_CMD_FW;
@@ -165,7 +162,6 @@ void jtag_wait(void)
 
 int main(void)
 {
-	unsigned char width=0;
 	unsigned int count=0;
 	unsigned long tmp1, tmp2;
 
@@ -251,10 +247,13 @@ int main(void)
 		timer_cap[TIMER_VALUE_DEEPIN+1] = (tmp1>tmp2?tmp1:tmp2) >> 1;
 #endif
 
-		int m, n;
-		m = menu_refresh();
+		tmp1 = menu_refresh();
 
 #ifdef MODULE_PWM
+		int m, n;
+
+		m = tmp1;
+
 		if (n != m) {
 			n = m;
 			wave_pwm((n+1)*10000, 80000);

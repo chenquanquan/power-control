@@ -33,6 +33,7 @@ void pwm_spwm_handler(void)
 
 	PWMGenIntClear(PWM_BASE, PWM_GEN_0, PWM_INT_GEN_0);
 
+	/* Output the switch wave */
 	if (spwm_flag) {
 			PWM_OD;
 	} else {
@@ -93,8 +94,28 @@ void wave_spwm_data(unsigned int amplitude)
 		spwm_b[n] = 0xff - (spwm_data[n]/amplitude);
 		spwm_b[1023-n] = 0xff - (spwm_data[n]/amplitude);
 	}
-
 }		/* -----  end of function wave_spwm_data  ----- */
+
+/* wave_spwm_data_step - initialize the sin data with amplitude with step
+ * The wave step is 64.
+ */
+void wave_spwm_data_step(unsigned int amplitude)
+{
+	int n;
+	unsigned long tmp;
+
+	for (n=0; n < 512; n++) {
+		tmp = ((unsigned long)spwm_data[n] * amplitude) >> 6;
+		spwm_a[n] = (unsigned char)tmp;
+		spwm_a[1023-n] = (unsigned char)tmp;
+	}
+	for (n=0; n < 512; n++) {
+		tmp = 0xff - (((unsigned long)spwm_data[n] * amplitude) >> 6);
+		spwm_b[n] = (unsigned char)tmp;
+		spwm_b[1023-n] = (unsigned char)tmp;
+	}
+
+}		/* -----  end of function wave_spwm_data_step  ----- */
 
 /* wave_spwm - output a spwm
 */

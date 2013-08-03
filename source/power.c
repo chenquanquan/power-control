@@ -1,4 +1,5 @@
-
+/* power.c - a control for power
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,13 +1,15 @@
 /*
  *  frame-buffer.c - 2013年07月14日 18时06分31秒
  *
- *  Description:  the frame buffer for LCD display.
+ *  Description:  The frame buffer for LCD display. the data write in frame buffer before
+ *                display on LCD.
  * 
  *  Copyright (c) 2013, chenchacha
  */
 #include "lcd/frame-buffer.h"
 
 #if 1
+/* word data */
 unsigned char lcd_font[96][5] =
 {
     { 0x00, 0x00, 0x00, 0x00, 0x00 }, // " "

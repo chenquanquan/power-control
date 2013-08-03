@@ -84,8 +84,8 @@ int display_roll(frame_buffer_t *frame_buffer, int place, int roll, int dirction
 	return i;
 }		/* -----  end of function display_roll  ----- */
 
-/*  display_boxes -
-*/
+/*  display_boxes - write a boxes on LCD
+ */
 void display_boxes(frame_buffer_t *frame_buffer,int x, int y, int length, int width)
 {
 	unsigned char *fb = frame_buffer->fb;
@@ -95,8 +95,8 @@ void display_boxes(frame_buffer_t *frame_buffer,int x, int y, int length, int wi
 	fb_negation_dollop(x+1,x+y,x+length-1,y+width-1,fb,column_max);
 }		/* -----  end of function display_boxes  ----- */
 
-/* display_add_string -
-*/
+/* display_add_string - add a string on LCD
+ */
 void display_add_string(frame_buffer_t *frame_buffer, int x, int y, const char *string)
 {
 	unsigned char *fb = frame_buffer->fb;

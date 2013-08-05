@@ -27,7 +27,7 @@
 
 #define	WAVE_32_PERIPH	SYSCTL_PERIPH_GPIOD
 #define	WAVE_32_PORT	GPIO_PORTD_BASE
-#define WAVE_32_PIN		GPIO_PIN_5
+#define WAVE_32_PIN		GPIO_PIN_4
 #define WAVE_32_INT		INT_GPIOD
 #define WAVE_32_PREAD	(GPIOPinRead(WAVE_32_PORT, WAVE_32_PIN) & WAVE_32_PIN)
 
@@ -40,6 +40,7 @@
 
 extern void wave_spwm(void);
 extern void wave_spwm_data(unsigned int amplitude);
+extern void wave_spwm_data_step(unsigned int amplitude);
 extern void wave_spwm_load(unsigned long value);
 
 extern void wave_pwm(unsigned long period1, unsigned long period2);

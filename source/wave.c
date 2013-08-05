@@ -45,13 +45,20 @@ void pwm_spwm_handler(void)
 	PWMPulseWidthSet(PWM_BASE, PWM_OUT_0, spwm_value);
 
 }
-
+unsigned int spwm_reset=0;
 void time_spwm_handler(void)
 {
 	static unsigned int wave_flag=1;
 	static unsigned int i=0, j=0;
 
 	TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+
+	if (spwm_reset == 1) {
+		i=j=0;
+		spwm_reset=0;
+		wave_flag=1;
+	}
+
 
 	if (wave_flag) {
 		spwm_value=spwm_a[i]+0x1;
@@ -76,6 +83,8 @@ void time_spwm_handler(void)
 		/* 		IntEnable(INT_PWM0); */
 		/* Output postive period */
 		wave_flag=1;
+		/* Close timer */
+		TimerDisable(TIMER2_BASE, TIMER_A);
 	}
 
 }
@@ -118,7 +127,7 @@ void wave_spwm_data_step(unsigned int amplitude)
 }		/* -----  end of function wave_spwm_data_step  ----- */
 
 /* wave_spwm - output a spwm
-*/
+ */
 void wave_spwm(void)
 {
 	PWM_t pwm1;
@@ -163,6 +172,7 @@ void wave_spwm(void)
 	timer.config = TIMER_CFG_32_BIT_PER;
 /* 	timer.config = TIMER_CFG_A_CAP_TIME | TIMER_CFG_16_BIT_PAIR;
  */
+	/* 50Hz */
 	timer.value = 5800;
 	timer.interrupt = INT_TIMER2A;
 	timer.prescale = 0;
@@ -170,7 +180,7 @@ void wave_spwm(void)
 	timer.handler = time_spwm_handler;
 	TIMER_init(&timer);
 	/* Configure the periority of interrupt */
-	IntPrioritySet(INT_TIMER2A, 2);
+	IntPrioritySet(INT_TIMER2A, 0);
 
 	TimerEnable(timer.base, timer.ntimer);
 #endif
@@ -244,7 +254,7 @@ void wave_capture(void (*capture_handler)(void))
 	/* Set GPIO B0 as an output */
 	GPIOPinTypeTimer(CCP0_PORT, CCP0_PIN);
 
-	/* configure timer structure */
+	/* Configure timer structure */
 	timer.base = TIMER0_BASE;
 	timer.ntimer = TIMER_A;
 	/* Timer A event timer and Two 16-bit timers */
@@ -273,17 +283,17 @@ void wave_cap32(void (*capture_handler)(void))
 	/* Enable the peripherals */
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     SysCtlPeripheralEnable(WAVE_32_PERIPH);
-	/* configure GPIO in input */
+	/* Configure GPIO in input */
 	GPIOPinTypeGPIOInput(WAVE_32_PORT, WAVE_32_PIN);
-	/* configure interrupt type */
+	/* Configure interrupt type */
 	GPIOIntTypeSet(WAVE_32_PORT, WAVE_32_PIN, GPIO_BOTH_EDGES);
 
-	/* register the interrupt handler */
+	/* Register the interrupt handler */
 	GPIOPortIntRegister(WAVE_32_PORT, capture_handler);
-	/* enable the pin interrupt */
+	/* Enable the pin interrupt */
 	GPIOPinIntEnable(WAVE_32_PORT, WAVE_32_PIN);
 
-	/* configure timer structure */
+	/* Configure timer structure */
 	timer.base = TIMER0_BASE;
 	timer.ntimer = TIMER_A;
 	timer.config = TIMER_CFG_32_BIT_PER;
@@ -293,7 +303,7 @@ void wave_cap32(void (*capture_handler)(void))
 	timer.handler = 0;
 	TIMER_init(&timer);
 
-	/* enable the port interrupt */
+	/* Enable the port interrupt */
 	TimerEnable(timer.base, timer.ntimer);
 	IntEnable(WAVE_32_INT);
 }		/* -----  end of function wave_capture  ----- */

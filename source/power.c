@@ -108,6 +108,8 @@ void timer_cap32_handler(void)
 	}
 }
 
+/* The spwm reset flag */
+extern unsigned int spwm_reset;
 void timer_interrupt_handler(void)
 {
 	wave_interrupt_clean();
@@ -115,13 +117,17 @@ void timer_interrupt_handler(void)
 
 	switch (timer_cmd) {
 		case TIMER_CMD_FW:
-			/* follower wave pin */
+			/* Follower wave pin */
 			if (wave_pon) {
 				WAVE_INT_OD;
 				wave_pon = 0;
+				/* Spwm reset */
+				spwm_reset=1;
+				/* Enable spwm interrupt */
+				TimerEnable(TIMER2_BASE, TIMER_A);
 			}
 
-			/* start scan postive or nagetive */
+			/* Start scan postive or nagetive */
 			timer_cmd = TIMER_CMD_SCAN;
 			wave_interrupt_load(timer_cap[TIMER_VALUE_DEEPIN+1]);
 			wave_interrupt_start();
@@ -246,6 +252,10 @@ int main(void)
 		/* load value to follower wave */
 		timer_cap[TIMER_VALUE_DEEPIN] = (tmp1<tmp2?tmp1:tmp2) >> 1;
 		timer_cap[TIMER_VALUE_DEEPIN+1] = (tmp1>tmp2?tmp1:tmp2) >> 1;
+#ifdef MODULE_SPWM
+		/* Sync spwm period with input */
+		wave_spwm_load((tmp1+tmp2)/85);
+#endif
 #endif
 
 		tmp1 = menu_refresh();

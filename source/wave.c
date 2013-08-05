@@ -90,7 +90,7 @@ void time_spwm_handler(void)
 }
 
 /* wave_spwm_data - initialize the sin data with amplitude
- */
+*/
 void wave_spwm_data(unsigned int amplitude)
 {
 	int n;

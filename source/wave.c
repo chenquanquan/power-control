@@ -23,7 +23,8 @@
 
 unsigned char spwm_a[1024];
 unsigned char spwm_b[1024];
-unsigned char pwm_step=12;
+/* unsigned char pwm_step=12; */
+unsigned char pwm_step=24;
 unsigned char spwm_value=0xf;
 unsigned char spwm_flag=0;
 unsigned int spwm_count_u=10;
@@ -84,7 +85,7 @@ void time_spwm_handler(void)
 		/* Output postive period */
 		wave_flag=1;
 		/* Close timer */
-		TimerDisable(TIMER2_BASE, TIMER_A);
+/* 		TimerDisable(TIMER2_BASE, TIMER_A); */
 	}
 
 }

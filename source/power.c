@@ -254,7 +254,8 @@ int main(void)
 		timer_cap[TIMER_VALUE_DEEPIN+1] = (tmp1>tmp2?tmp1:tmp2) >> 1;
 #ifdef MODULE_SPWM
 		/* Sync spwm period with input */
-		wave_spwm_load((tmp1+tmp2)/85);
+		/* 		wave_spwm_load((tmp1+tmp2)/85); */
+		/* 		wave_spwm_load((tmp1+tmp2)/42); */
 #endif
 #endif
 
